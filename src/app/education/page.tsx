@@ -55,43 +55,12 @@ export default function Education() {
           <InfoItem label="Date of Birth" value="March 06, 2006" />
         </div>
 
-        {/* Navigation Buttons inside profile card */}
+        {/* Navigation Buttons */}
         <div className="mt-6 flex flex-col gap-3 w-full">
-          <Link
-            href="/favFood"
-            className="px-4 py-2 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
-                       hover:from-red-500 hover:to-blue-500 hover:scale-105 hover:shadow-lg
-                       transition-all duration-300 text-center font-semibold text-sm"
-          >
-            FAVORITE FOOD
-          </Link>
-
-          <Link
-            href="/favMusic"
-            className="px-4 py-2 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
-                       hover:from-red-500 hover:to-blue-500 hover:scale-105 hover:shadow-lg
-                       transition-all duration-300 text-center font-semibold text-sm"
-          >
-            FAVORITE MUSIC ARTIST
-          </Link>
-
-          <Link
-            href="/hobbies"
-            className="px-4 py-2 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
-                       hover:from-red-500 hover:to-blue-500 hover:scale-105 hover:shadow-lg
-                       transition-all duration-300 text-center font-semibold text-sm"
-          >
-            HOBBIES
-          </Link>
-
-          <Link
-            href="/"
-            className="px-4 py-2 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
-                       hover:from-red-500 hover:to-blue-500 hover:scale-105 hover:shadow-lg
-                       transition-all duration-300 text-center font-semibold text-sm"
-          >
-            Back to Home
-          </Link>
+          <NavButton href="/favFood" text="FAVORITE FOOD" />
+          <NavButton href="/favMusic" text="FAVORITE MUSIC ARTIST" />
+          <NavButton href="/hobbies" text="HOBBIES" />
+          <NavButton href="/" text="Back to Home" />
         </div>
       </div>
     </div>
@@ -99,13 +68,27 @@ export default function Education() {
 }
 
 // Info item component
-function InfoItem({ label, value }) {
+function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <p className="flex justify-between items-center bg-zinc-100/80 dark:bg-zinc-800/80 px-4 py-2 rounded-xl shadow-inner">
+    <div className="flex justify-between items-center bg-zinc-100/80 dark:bg-zinc-800/80 px-4 py-2 rounded-xl shadow-inner">
       <strong className="text-blue-600 dark:text-blue-400">{label}:</strong>
-      <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-purple-400 to-blue-400 font-semibold">
+      <span className="bg-gradient-to-r from-red-400 via-purple-400 to-blue-400 bg-clip-text text-transparent font-semibold">
         {value}
       </span>
-    </p>
+    </div>
+  );
+}
+
+// Navigation button component
+function NavButton({ href, text }: { href: string; text: string }) {
+  return (
+    <Link
+      href={href}
+      className="px-4 py-2 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
+                 hover:from-red-500 hover:to-blue-500 hover:scale-105 hover:shadow-lg
+                 transition-all duration-300 text-center font-semibold text-sm"
+    >
+      {text}
+    </Link>
   );
 }
