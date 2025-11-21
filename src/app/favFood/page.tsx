@@ -43,13 +43,22 @@ export default function Education() {
         ))}
       </div>
 
-      {/* Home Button */}
-      <Link href="/">
-        <button className="mt-12 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 
-                           rounded-full shadow-xl transition-all duration-300 hover:scale-105">
-          Home
-        </button>
-      </Link>
+      {/* Buttons */}
+      <div className="mt-12 flex gap-6 flex-wrap justify-center">
+        <Link href="/">
+          <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 
+                             rounded-full shadow-xl transition-all duration-300 hover:scale-105">
+            Home
+          </button>
+        </Link>
+
+        <Link href="/education">
+          <button className="bg-gradient-to-r from-purple-800 to-indigo-900 hover:from-purple-700 hover:to-indigo-800 
+                             text-white font-bold py-3 px-6 rounded-full shadow-xl transition-all duration-300 hover:scale-105">
+            Back to Profile
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }

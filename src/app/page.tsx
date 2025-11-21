@@ -39,18 +39,7 @@ export default function Home() {
           PROFILE
         </Link>
 
-        {/* 2 - Hobbies */}
-        <Link
-          href="/hobbies"
-          className="px-6 py-3 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
-                     hover:from-red-500 hover:to-blue-500 hover:scale-110 hover:shadow-2xl
-                     transition-all duration-300 ease-in-out text-center font-semibold shadow-md
-                     backdrop-blur-md bg-opacity-90 hover:bg-opacity-100"
-        >
-          HOBBIES
-        </Link>
-
-        {/* 3 - About */}
+        {/* 2 - About */}
         <Link
           href="/contact"
           className="px-6 py-3 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
@@ -59,28 +48,6 @@ export default function Home() {
                      backdrop-blur-md bg-opacity-90 hover:bg-opacity-100"
         >
           ABOUT
-        </Link>
-
-        {/* 4 - Favorite Food */}
-        <Link
-          href="/favFood"
-          className="px-6 py-3 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
-                     hover:from-red-500 hover:to-blue-500 hover:scale-110 hover:shadow-2xl
-                     transition-all duration-300 ease-in-out text-center font-semibold shadow-md
-                     backdrop-blur-md bg-opacity-90 hover:bg-opacity-100"
-        >
-          FAVORITE FOOD
-        </Link>
-
-        {/* 5 - Favorite Music */}
-        <Link
-          href="/favMusic"
-          className="px-6 py-3 bg-gradient-to-r from-red-400 to-blue-400 text-white rounded-full
-                     hover:from-red-500 hover:to-blue-500 hover:scale-110 hover:shadow-2xl
-                     transition-all duration-300 ease-in-out text-center font-semibold shadow-md
-                     backdrop-blur-md bg-opacity-90 hover:bg-opacity-100"
-        >
-          FAVORITE MUSIC ARTIST
         </Link>
 
       </div>
