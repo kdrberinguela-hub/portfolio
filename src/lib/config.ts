@@ -1,0 +1,1 @@
+export const API_BASE = "https://trialnestjs-gvd8.onrender.com/auth";
