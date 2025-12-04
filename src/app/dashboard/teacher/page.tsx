@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { FiLogOut, FiEdit, FiTrash2, FiPlus, FiUsers, FiInbox } from 'react-icons/fi';
+import { FiLogOut, FiEdit, FiTrash2, FiPlus, FiUsers, FiInbox, FiAward, FiStar } from 'react-icons/fi';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Student {
@@ -18,6 +19,7 @@ interface Student {
   course: string;
   year_level: number;
   room: string;
+  position: string;
   status: 'Active' | 'Inactive' | 'Graduated';
   enrollment_date: string;
   created_at: string;
@@ -52,6 +54,37 @@ const roomsByCourseYear: Record<string, Record<number, string[]>> = {
   BSECE: { 1: ['1A','1B','1C','1D','1E'], 2: ['2A','2B','2C','2D','2E'], 3: ['3A','3B','3C','3D','3E'], 4: ['4A','4B','4C','4D','4E'] },
 };
 
+// Student Government Positions
+const studentPositions = [
+  'Regular Student',
+  'Class President',
+  'Class Vice President', 
+  'Class Secretary',
+  'Class Treasurer',
+  'Class Auditor',
+  'Student Council President',
+  'Student Council Vice President',
+  'Student Council Secretary',
+  'Student Council Treasurer',
+  'Student Council Auditor',
+  'Department Representative',
+  'Club President',
+  'Club Vice President',
+  'Club Secretary',
+  'Club Treasurer'
+];
+
+// Position badge colors
+const getPositionColor = (position: string) => {
+  if (position.includes('President')) return 'bg-gradient-to-r from-purple-500 to-purple-700 text-white';
+  if (position.includes('Vice President')) return 'bg-gradient-to-r from-blue-500 to-blue-700 text-white';
+  if (position.includes('Secretary')) return 'bg-gradient-to-r from-green-500 to-green-700 text-white';
+  if (position.includes('Treasurer')) return 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white';
+  if (position.includes('Auditor')) return 'bg-gradient-to-r from-red-500 to-red-700 text-white';
+  if (position.includes('Representative') || position.includes('Club')) return 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white';
+  return 'bg-gray-100 text-gray-700';
+};
+
 export default function TeacherDashboardPage() {
   const router = useRouter();
   const token = getToken();
@@ -60,10 +93,10 @@ export default function TeacherDashboardPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [activeSection, setActiveSection] = useState<'students'|'requests'>('students');
+  const [activeSection, setActiveSection] = useState<'students'|'requests'|'positions'>('students');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newStudent, setNewStudent] = useState<Partial<Student>>({
-    student_number:'', full_name:'', email:'', phone:'', course:'', year_level:1, status:'Active', enrollment_date:new Date().toISOString().split('T')[0], created_at:new Date().toISOString()
+    student_number:'', full_name:'', email:'', phone:'', course:'', year_level:1, position:'Regular Student', status:'Active', enrollment_date:new Date().toISOString().split('T')[0], created_at:new Date().toISOString()
   });
   const [activeYear, setActiveYear] = useState<number|null>(null);
   const [activeCourse, setActiveCourse] = useState<string|null>(null);
@@ -141,7 +174,7 @@ export default function TeacherDashboardPage() {
     localStorage.setItem(`students_${token}`,JSON.stringify(updated));
     localStorage.setItem('students_all',JSON.stringify(updated));
     showToast(`Student added. Assigned to room ${assignedRoom}`,'success');
-    setNewStudent({student_number:'',full_name:'',email:'',phone:'',course:'',year_level:1,status:'Active',enrollment_date:new Date().toISOString().split('T')[0],created_at:new Date().toISOString()});
+    setNewStudent({student_number:'',full_name:'',email:'',phone:'',course:'',year_level:1,position:'Regular Student',status:'Active',enrollment_date:new Date().toISOString().split('T')[0],created_at:new Date().toISOString()});
     setShowAddForm(false);
   };
 
@@ -162,7 +195,7 @@ export default function TeacherDashboardPage() {
         const yearRooms=courseRooms ? courseRooms[year_level] : ['A'];
         const sameCourseYear=students.filter(s=>s.course===course && s.year_level===year_level);
         const assignedRoom=yearRooms[sameCourseYear.length % yearRooms.length];
-        const newStudent:Student={ student_id:uuidv4(), student_number:request.student_number, full_name:request.student_name, email:'', phone:'', course, year_level, status:'Active', enrollment_date:new Date().toISOString().split('T')[0], created_at:new Date().toISOString(), room:assignedRoom };
+        const newStudent:Student={ student_id:uuidv4(), student_number:request.student_number, full_name:request.student_name, email:'', phone:'', course, year_level, position:'Regular Student', status:'Active', enrollment_date:new Date().toISOString().split('T')[0], created_at:new Date().toISOString(), room:assignedRoom };
         const updatedStudents=[...students,newStudent];
         setStudents(updatedStudents);
         localStorage.setItem(`students_${token}`,JSON.stringify(updatedStudents));
@@ -184,6 +217,9 @@ export default function TeacherDashboardPage() {
   const getCoursesInYear=(year:number)=>Array.from(new Set(students.filter(s=>s.year_level===year).map(s=>s.course)));
   const getRoomsInCourseYear=(year:number,course:string)=>Array.from(new Set(students.filter(s=>s.year_level===year && s.course===course).map(s=>s.room)));
   const getStudentsInRoom=(year:number,course:string,room:string)=>students.filter(s=>s.year_level===year && s.course===course && s.room===room);
+
+  // Get students with leadership positions
+  const getStudentLeaders = () => students.filter(s => s.position && s.position !== 'Regular Student');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
@@ -271,13 +307,31 @@ export default function TeacherDashboardPage() {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                  <Input 
-                    value={editingStudent.status} 
-                    onChange={e=>setEditingStudent({...editingStudent, status:e.target.value as any})} 
-                    className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 transition-colors"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Position</label>
+                    <select 
+                      value={editingStudent.position} 
+                      onChange={e=>setEditingStudent({...editingStudent, position:e.target.value})} 
+                      className="h-12 w-full border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 transition-colors px-3"
+                    >
+                      {studentPositions.map(pos => (
+                        <option key={pos} value={pos}>{pos}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                    <select 
+                      value={editingStudent.status} 
+                      onChange={e=>setEditingStudent({...editingStudent, status:e.target.value as any})} 
+                      className="h-12 w-full border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 transition-colors px-3"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                      <option value="Graduated">Graduated</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="flex gap-4 pt-4">
                   <Button 
@@ -324,6 +378,22 @@ export default function TeacherDashboardPage() {
             {requests.filter(r=>r.status==='Pending').length > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
                 {requests.filter(r=>r.status==='Pending').length}
+              </span>
+            )}
+          </Button>
+          <Button 
+            onClick={()=>setActiveSection('positions')} 
+            className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:-translate-y-1 relative ${
+              activeSection==='positions'
+                ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white shadow-xl shadow-amber-500/25' 
+                : 'bg-white/80 text-gray-600 hover:bg-white hover:text-gray-800 border-2 border-gray-200 hover:border-gray-300 shadow-lg'
+            }`}
+          >
+            <FiAward className="w-5 h-5" /> 
+            Student Leaders
+            {getStudentLeaders().length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg">
+                {getStudentLeaders().length}
               </span>
             )}
           </Button>
@@ -405,6 +475,21 @@ export default function TeacherDashboardPage() {
                         className="h-12 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 transition-colors"
                       />
                     </div>
+                  </div>
+                  <div className="mt-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FiAward className="w-4 h-4" />
+                      Student Position
+                    </label>
+                    <select
+                      value={newStudent.position}
+                      onChange={e=>setNewStudent({...newStudent,position:e.target.value})}
+                      className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-0 transition-colors px-3"
+                    >
+                      {studentPositions.map(pos => (
+                        <option key={pos} value={pos}>{pos}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex gap-4 mt-8">
                     <Button 
@@ -513,7 +598,7 @@ export default function TeacherDashboardPage() {
                             <th className="px-6 py-4 text-left font-semibold text-gray-700">Student #</th>
                             <th className="px-6 py-4 text-left font-semibold text-gray-700">Name</th>
                             <th className="px-6 py-4 text-left font-semibold text-gray-700">Email</th>
-                            <th className="px-6 py-4 text-left font-semibold text-gray-700">Phone</th>
+                            <th className="px-6 py-4 text-left font-semibold text-gray-700">Position</th>
                             <th className="px-6 py-4 text-left font-semibold text-gray-700">Status</th>
                             <th className="px-6 py-4 text-left font-semibold text-gray-700">Actions</th>
                           </tr>
@@ -524,7 +609,11 @@ export default function TeacherDashboardPage() {
                               <td className="px-6 py-4 font-medium text-gray-900">{student.student_number}</td>
                               <td className="px-6 py-4 font-medium text-gray-900">{student.full_name}</td>
                               <td className="px-6 py-4 text-gray-600">{student.email}</td>
-                              <td className="px-6 py-4 text-gray-600">{student.phone}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPositionColor(student.position || 'Regular Student')}`}>
+                                  {student.position === 'Regular Student' ? 'Student' : student.position}
+                                </span>
+                              </td>
                               <td className="px-6 py-4">
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                                   student.status === 'Active' ? 'bg-green-100 text-green-800' :
@@ -610,7 +699,7 @@ export default function TeacherDashboardPage() {
                           <td className="px-6 py-4 text-gray-600 max-w-xs truncate">{request.details}</td>
                           <td className="px-6 py-4">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              request.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            request.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                               request.status === 'Approved' ? 'bg-green-100 text-green-800' :
                               'bg-red-100 text-red-800'
                             }`}>
@@ -640,6 +729,129 @@ export default function TeacherDashboardPage() {
                     </tbody>
                   </table>
                 </div>
+                {requests.length === 0 && (
+                  <div className="text-center py-12">
+                    <FiInbox className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No Requests Found</h3>
+                    <p className="text-gray-500">Student requests will appear here when submitted</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* NEW: Student Leaders/Positions Section */}
+        {activeSection === 'positions' && (
+          <div className="space-y-6">
+            <Card className="border-0 shadow-xl rounded-3xl overflow-hidden">
+              <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 p-6">
+                <div className="flex items-center gap-3">
+                  <FiAward className="w-8 h-8 text-white" />
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Student Leadership</h2>
+                    <p className="text-amber-100">Current student leaders and office holders</p>
+                  </div>
+                </div>
+              </div>
+              <CardContent className="p-8">
+                {getStudentLeaders().length === 0 ? (
+                  <div className="text-center py-12">
+                    <FiStar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No Student Leaders Assigned</h3>
+                    <p className="text-gray-500">Assign leadership positions to students to see them here</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {getStudentLeaders().map(student => (
+                      <Card key={student.student_id} className="border-0 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                        <div className={`p-4 ${getPositionColor(student.position)}`}>
+                          <div className="flex items-center gap-3">
+                            <FiAward className="w-6 h-6" />
+                            <h3 className="font-bold text-lg">{student.position}</h3>
+                          </div>
+                        </div>
+                        <CardContent className="p-6">
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="font-bold text-lg text-gray-900">{student.full_name}</h4>
+                              <p className="text-gray-600">ID: {student.student_number}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-700 font-medium">{student.course} - Year {student.year_level}</p>
+                              <p className="text-gray-600">Room {student.room}</p>
+                            </div>
+                            {student.email && (
+                              <div className="text-sm text-gray-600">
+                                📧 {student.email}
+                              </div>
+                            )}
+                            {student.phone && (
+                              <div className="text-sm text-gray-600">
+                                📱 {student.phone}
+                              </div>
+                            )}
+                            <div className="pt-3 border-t border-gray-200">
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                student.status === 'Active' ? 'bg-green-100 text-green-800' :
+                                student.status === 'Inactive' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {student.status}
+                              </span>
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                              <Button
+                                onClick={() => handleEditStudent(student)}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 text-sm"
+                              >
+                                <FiEdit className="w-4 h-4 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteStudent(student.student_id)}
+                                className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 text-sm"
+                              >
+                                <FiTrash2 className="w-4 h-4 mr-1" />
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {/* Position Statistics */}
+                {getStudentLeaders().length > 0 && (
+                  <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gradient-to-r from-purple-100 to-purple-200 p-4 rounded-2xl">
+                      <div className="text-2xl font-bold text-purple-700">
+                        {getStudentLeaders().filter(s => s.position.includes('President')).length}
+                      </div>
+                      <div className="text-purple-600 text-sm font-medium">Presidents</div>
+                    </div>
+                    <div className="bg-gradient-to-r from-blue-100 to-blue-200 p-4 rounded-2xl">
+                      <div className="text-2xl font-bold text-blue-700">
+                        {getStudentLeaders().filter(s => s.position.includes('Vice President')).length}
+                      </div>
+                      <div className="text-blue-600 text-sm font-medium">Vice Presidents</div>
+                    </div>
+                    <div className="bg-gradient-to-r from-green-100 to-green-200 p-4 rounded-2xl">
+                      <div className="text-2xl font-bold text-green-700">
+                        {getStudentLeaders().filter(s => s.position.includes('Secretary')).length}
+                      </div>
+                      <div className="text-green-600 text-sm font-medium">Secretaries</div>
+                    </div>
+                    <div className="bg-gradient-to-r from-orange-100 to-orange-200 p-4 rounded-2xl">
+                      <div className="text-2xl font-bold text-orange-700">
+                        {getStudentLeaders().filter(s => s.position.includes('Treasurer')).length}
+                      </div>
+                      <div className="text-orange-600 text-sm font-medium">Treasurers</div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

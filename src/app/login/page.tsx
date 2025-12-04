@@ -74,7 +74,7 @@ export default function LoginPage() {
     }
   }
 
-  // ---------------- PARTICLE BACKGROUND (UNCHANGED) ----------------
+
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -153,7 +153,6 @@ export default function LoginPage() {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  // ---------------- UI (UNCHANGED) ----------------
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-black p-6 overflow-hidden">
