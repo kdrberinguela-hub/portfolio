@@ -7,21 +7,13 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { API_BASE } from '@/lib/config'
 
-interface Particle {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  size: number
-}
-
 export default function RegisterPage() {
   const router = useRouter()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [email, setEmail] = useState('')
-  const [mobile, setMobile] = useState('')
+  const [role, setRole] = useState<'student' | 'teacher'>('student')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [animate, setAnimate] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -31,30 +23,37 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
 
+    if (!username.trim() || !password.trim()) {
+      setError('Please enter username and password')
+      return
+    }
+
+    setLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/register`, {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, email, mobile }),
+        body: JSON.stringify({ username, password, role }),
       })
 
       const data = await res.json()
-      if (!res.ok) return setError(data.message || 'Register failed')
 
-      // Save user data to localStorage after successful registration
-      localStorage.setItem('user', JSON.stringify({
-        name: username,
-        email,
-        phone: mobile,
-      }))
+      if (!res.ok) {
+        setError(data.message || 'Registration failed')
+        return
+      }
 
+      alert('Registration successful! Please login.')
       router.push('/login')
-    } catch {
-      setError('Something went wrong. Please try again.')
+    } catch (err) {
+      console.error(err)
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Spider-web effect
+  // Particle background animation (unchanged)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -65,20 +64,19 @@ export default function RegisterPage() {
     const height = (canvas.height = window.innerHeight)
     const numParticles = 200
     const maxDistance = 200
-    const particlesArr: Particle[] = []
+    const particles: { x: number; y: number; vx: number; vy: number; size: number }[] = []
 
     for (let i = 0; i < numParticles; i++) {
-      particlesArr.push({
+      particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 1,
-        vy: (Math.random() - 0.5) * 1,
+        vx: (Math.random() - 0.3) * 1,
+        vy: (Math.random() - 0.3) * 1,
         size: 2 + Math.random() * 2,
       })
     }
 
     const mouse = { x: width / 2, y: height / 2 }
-
     const handleMouseMove = (e: MouseEvent) => {
       mouse.x = e.clientX
       mouse.y = e.clientY
@@ -87,8 +85,7 @@ export default function RegisterPage() {
 
     const animateParticles = () => {
       ctx.clearRect(0, 0, width, height)
-
-      particlesArr.forEach((p) => {
+      particles.forEach((p) => {
         p.x += p.vx
         p.y += p.vy
         if (p.x < 0 || p.x > width) p.vx *= -1
@@ -102,6 +99,7 @@ export default function RegisterPage() {
         const dx = p.x - mouse.x
         const dy = p.y - mouse.y
         const dist = Math.sqrt(dx * dx + dy * dy)
+
         if (dist < maxDistance) {
           ctx.beginPath()
           ctx.moveTo(p.x, p.y)
@@ -111,7 +109,7 @@ export default function RegisterPage() {
           ctx.stroke()
         }
 
-        particlesArr.forEach((other) => {
+        particles.forEach((other) => {
           const dx = p.x - other.x
           const dy = p.y - other.y
           const dist = Math.sqrt(dx * dx + dy * dy)
@@ -125,6 +123,7 @@ export default function RegisterPage() {
           }
         })
       })
+
       requestAnimationFrame(animateParticles)
     }
 
@@ -143,78 +142,72 @@ export default function RegisterPage() {
       >
         <CardContent>
           <h1 className="text-4xl font-bold mb-4 text-center text-red-500 animate-bounce">
-            Create Account
+            Register
           </h1>
-          <p className="text-gray-300 text-center mb-8 font-semibold">
-            Register your account
-          </p>
 
           <form onSubmit={handleRegister} className="space-y-6">
-            <div className="relative">
+            <div>
               <label className="block text-gray-300 mb-2 font-medium">Username</label>
               <Input
                 placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full border border-gray-600 rounded-xl p-4 bg-gray-800 text-white focus:ring-2 focus:ring-red-500 shadow-sm transition duration-300 hover:shadow-md"
+                className="w-full border border-gray-600 rounded-xl p-4 bg-gray-800 text-white"
               />
             </div>
 
-            <div className="relative">
-              <label className="block text-gray-300 mb-2 font-medium">Email</label>
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-600 rounded-xl p-4 bg-gray-800 text-white focus:ring-2 focus:ring-red-500 shadow-sm transition duration-300 hover:shadow-md"
-              />
-            </div>
-
-            <div className="relative">
-              <label className="block text-gray-300 mb-2 font-medium">Mobile Number</label>
-              <Input
-                type="tel"
-                placeholder="Enter your mobile number"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                className="w-full border border-gray-600 rounded-xl p-4 bg-gray-800 text-white focus:ring-2 focus:ring-red-500 shadow-sm transition duration-300 hover:shadow-md"
-              />
-            </div>
-
-            <div className="relative">
+            <div>
               <label className="block text-gray-300 mb-2 font-medium">Password</label>
               <Input
                 type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-600 rounded-xl p-4 bg-gray-800 text-white focus:ring-2 focus:ring-red-500 shadow-sm transition duration-300 hover:shadow-md"
+                className="w-full border border-gray-600 rounded-xl p-4 bg-gray-800 text-white"
               />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 mb-2 font-medium">Role</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="student"
+                    checked={role === 'student'}
+                    onChange={() => setRole('student')}
+                    className="accent-red-500"
+                  />
+                  Student
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="teacher"
+                    checked={role === 'teacher'}
+                    onChange={() => setRole('teacher')}
+                    className="accent-red-500"
+                  />
+                  Teacher
+                </label>
+              </div>
             </div>
 
             {error && <p className="text-red-500 text-center text-sm animate-pulse">{error}</p>}
 
             <Button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 rounded-xl transform transition duration-300 hover:scale-105 shadow-lg"
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl"
+              disabled={loading}
             >
-              Register
+              {loading ? 'Registering...' : 'Register'}
             </Button>
           </form>
 
-          <div className="flex items-center my-6">
-            <hr className="flex-1 border-gray-700" />
-            <span className="mx-4 text-gray-400">or</span>
-            <hr className="flex-1 border-gray-700" />
-          </div>
-
-          <div className="text-center">
-            <Button
-              variant="link"
-              className="text-red-500 hover:underline font-medium transition transform hover:scale-105"
-              onClick={() => router.push('/login')}
-            >
+          <div className="text-center mt-4">
+            <Button variant="link" className="text-red-500" onClick={() => router.push('/login')}>
               Back to Login
             </Button>
           </div>
